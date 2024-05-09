@@ -4,6 +4,12 @@ namespace PipelinePattern.Steps;
 
 public class SummarizerStep : AStep
 {
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="parameter"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException"></exception>
     public override object Execute(object parameter)
     {
         var wordFrequency = parameter as Dictionary<string, int>;

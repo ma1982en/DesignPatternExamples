@@ -4,6 +4,12 @@ namespace PipelinePattern.Steps;
 
 public class WordCounterStep : AStep 
 {
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="parameter"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException"></exception>
     public override object Execute(object parameter)
     {
         var text = parameter as string;
