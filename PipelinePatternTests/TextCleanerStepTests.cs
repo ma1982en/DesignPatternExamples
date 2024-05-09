@@ -1,7 +1,7 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿
 using PipelinePattern.Steps;
 
-namespace PipelinePattern.Tests;
+namespace PipelinePatternTests;
 
 [TestClass]
 public class TextCleanerStepTests
