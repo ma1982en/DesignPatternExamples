@@ -1,0 +1,115 @@
+﻿
+@using AutoUpdateChoco.Configuration
+@using AutoUpdateChoco.Services
+@using AutoUpdateChoco.Mediators
+@using AutoUpdateChoco.Commands
+@using AutoUpdateChoco.Contracts
+@using RazorConsole.Components
+@using Spectre.Console
+@using AutoUpdateChoco
+@using RazorConsole.Core
+
+@switch (_view)
+{
+  case View.Main:
+    <Select TItem="string"
+            Options="@_menuItems"
+            ValueChanged="@HandleMenuSelection"
+            SelectedOptionForeground="@Color.Green">
+        
+    </Select>
+    break;
+  case View.Settings:
+    <AutoUpdateChocoSettings OnBack="@BackToMain"/>
+    break;
+  case View.Info:
+    <AutoUpdateChocoInfoPanel OnBack="@BackToMain"/>
+    break;
+}
+
+@code {
+  
+  private static class MenuOption
+  {
+    public const string Update = "▶️\tUpdate jetzt ausführen";
+    public const string Settings = "⚙️\tEinstellungen";
+    public const string Info = "ℹ️\tInfos anzeigen";
+    public const string Exit = "❌\tBeenden";
+  }
+
+  private readonly string[] _menuItems =
+  [
+    MenuOption.Update,
+    MenuOption.Settings,
+    MenuOption.Info,
+    MenuOption.Exit
+  ];
+
+  private async Task HandleMenuSelection(string value)
+  {
+    switch (value)
+    {
+      case MenuOption.Update:
+        await ExecuteUpdate();
+        break;
+      case MenuOption.Settings:
+        AnsiConsole.Clear();
+        _view = View.Settings;
+        break;
+      case MenuOption.Info:
+        AnsiConsole.Clear();
+        _view = View.Info;
+        break;
+      case MenuOption.Exit:
+        Exit();
+        break;
+    }
+  }
+
+  [Inject] private IMediator Mediator { get; set; } = null!;
+
+  private enum View
+  {
+    Main,
+    Settings,
+    Info
+  }
+
+  private View _view = View.Main;
+
+  private async Task ExecuteUpdate()
+  {
+    try
+    {
+      await Mediator.Send(new UpgradeChocoCommand());
+      AnsiConsole.MarkupLine("[green]✓ Update wird ausgeführt...[/]");
+    }
+    catch (Exception ex)
+    {
+      AnsiConsole.MarkupLine($"[red]✗ Update-Fehler: {ex.Message}[/]");
+    }
+  }
+
+  private async Task ShowSettings()
+  {
+    _view = View.Settings;
+    await Task.CompletedTask;
+  }
+
+  private void ShowInfo()
+  {
+    _view = View.Info;
+  }
+
+  private void BackToMain()
+  {
+    AnsiConsole.Clear();
+    _view = View.Main;
+  }
+
+  private void Exit()
+  {
+    Environment.Exit(0);
+  }
+
+}

@@ -1,0 +1,70 @@
+﻿@using AutoUpdateChoco.Contracts
+@using AutoUpdateChoco.Mediators
+@using AutoUpdateChoco.Commands
+@using AutoUpdateChoco.Queries
+@using RazorConsole.Components
+@using Spectre.Console
+
+<Markup Foreground="@Color.Cyan" Content="⚙️  Einstellungen" />
+
+<Select TItem="string"
+        Options="@SettingsOptions"
+        ValueChanged="@HandleSettingsSelection"
+        SelectedOptionForeground="@Color.Green">
+  
+</Select>
+
+@code {
+  [Inject]
+  public IMediator Mediator { get; set; } = null!;
+
+  [Parameter]
+  public EventCallback OnBack { get; set; }
+
+  private ConfigDto? _model;
+  
+  private string[] SettingsOptions => [
+    $"🔧 Autostart: {((_model?.EnableAutostart == true) ? "✓ Aktiviert" : "✗ Deaktiviert")}",
+    "⏱️  Update-Intervall anpassen",
+    $"🔔 Benachrichtigungen: {((_model?.ShowNotifications == true) ? "✓ An" : "✗ Aus")}",
+    "⬅️  Zurück"
+  ];
+
+  protected override async Task OnInitializedAsync()
+  {
+    _model = await Mediator.SendQuery(new GetConfigQuery());
+  }
+  
+  private async Task HandleSettingsSelection(string value)
+  {
+    if (value.StartsWith("🔧"))
+      await ToggleAutostart();
+    else if (value.StartsWith("⏱️"))
+      await ChangeInterval();
+    else if (value.StartsWith("🔔"))
+      await ToggleNotifications();
+    else if (value.StartsWith("⬅️"))
+      await OnBack.InvokeAsync();
+  }
+
+  private async Task ToggleAutostart()
+  {
+    var newValue = !(_model?.EnableAutostart ?? false);
+    await Mediator.Send(new UpdateSettingsCommand { EnableAutostart = newValue });
+    if (_model != null) _model.EnableAutostart = newValue;
+  }
+
+  private async Task ChangeInterval()
+  {
+    var interval = AnsiConsole.Ask<int>("Intervall in Minuten (min. 5):");
+    await Mediator.Send(new UpdateSettingsCommand { UpdateIntervalMinutes = interval });
+    if (_model != null) _model.UpdateIntervalMinutes = Math.Max(5, interval);
+  }
+
+  private async Task ToggleNotifications()
+  {
+    var newValue = !(_model?.ShowNotifications ?? false);
+    await Mediator.Send(new UpdateSettingsCommand { ShowNotifications = newValue });
+    if (_model != null) _model.ShowNotifications = newValue;
+  }
+}

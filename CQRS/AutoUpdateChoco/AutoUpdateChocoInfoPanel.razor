@@ -1,0 +1,39 @@
+﻿@using AutoUpdateChoco.Contracts
+@using AutoUpdateChoco.Mediators
+@using AutoUpdateChoco.Queries
+@using RazorConsole.Components
+@using Spectre.Console
+
+<Rows>
+  <Markup Foreground="@Color.Cyan" Content="ℹ️  Informationen" />
+
+  <Markup Content="@($"📋 Autostart: {((_model?.EnableAutostart == true) ? "[green]Aktiviert[/]" : "[red]Deaktiviert[/]")}")" />
+  <Markup Content="@($"⏱️  Update-Intervall: {_model?.UpdateIntervalMinutes ?? 0} Minuten")" />
+  <Markup Content="@($"🔔 Benachrichtigungen: {((_model?.ShowNotifications == true) ? "[green]An[/]" : "[red]Aus[/]")}")" />
+  <Markup Content="@($"📁 Config-Datei: {_model?.ConfigPath}")" Foreground="@Color.Grey" />
+  <Markup Content="@($"🔧 .NET Version: {System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}")" Foreground="@Color.Grey" />
+</Rows>
+
+<Select TItem="string"
+        Options="@_backOption"
+        ValueChanged="@(_ => OnBack.InvokeAsync())"
+        SelectedOptionForeground="@Color.Yellow">
+  
+</Select> 
+
+@code {
+  
+  [Inject]
+  public IMediator Mediator { get; set; } = null!;
+
+  [Parameter]
+  public EventCallback OnBack { get; set; }
+
+  private ConfigDto? _model;
+  private readonly string[] _backOption = ["⬅️  Zurück"];
+
+  protected override async Task OnInitializedAsync()
+  {
+    _model = await Mediator.SendQuery(new GetConfigQuery());
+  }
+}
