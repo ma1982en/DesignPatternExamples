@@ -10,6 +10,8 @@ using AutoUpdateChoco.Contracts;
 using AutoUpdateChoco.Handlers;
 using AutoUpdateChoco.Services;
 using AutoUpdateChoco.Queries;
+using AutoUpdateChoco.Validators;
+using FluentValidation;
 
 namespace AutoUpdateChoco
 {
@@ -40,6 +42,18 @@ namespace AutoUpdateChoco
                 services.AddSingleton<IChocoService, ChocoService>();
                 
                 services.AddSingleton<IAutostartService, AutostartService>();
+                
+                // Validators registrieren
+                services.AddValidatorsFromAssemblyContaining<Program>();
+
+                // FluentValidation Validators registrieren
+                services.AddSingleton<IValidator<UpdateSettingsCommand>, UpdateSettingsCommandValidator>();
+                services.AddSingleton<IValidator<UpgradeChocoCommand>, UpgradeChocoCommandValidator>();
+
+                // Command-Validatoren explizit registrieren
+                services.AddSingleton<ICommandValidator<UpdateSettingsCommand>, CommandValidator<UpdateSettingsCommand>>();
+                services.AddSingleton<ICommandValidator<UpgradeChocoCommand>, CommandValidator<UpgradeChocoCommand>>();
+
 
                 // Handler registrieren (Commands)
                 services.AddSingleton<UpgradeChocoCommandHandler>();

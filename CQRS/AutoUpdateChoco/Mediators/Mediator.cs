@@ -15,6 +15,10 @@ namespace AutoUpdateChoco.Mediators
 
         public async Task Send<TCommand>(TCommand command) where TCommand : ICommand
         {
+            // Validierung mit dem konkreten Command-Typ durchführen
+            var commandType = command.GetType();
+            await ValidateCommandByType(command, commandType);
+            
             var handlerType = typeof(ICommandHandler<>).MakeGenericType(typeof(TCommand));
             var handler = _serviceProvider.GetService(handlerType);
 
@@ -30,7 +34,10 @@ namespace AutoUpdateChoco.Mediators
 
         public async Task<TResponse> Send<TResponse>(ICommand<TResponse> command)
         {
+            // Validierung mit dem konkreten Command-Typ durchführen
             var commandType = command.GetType();
+            await ValidateCommandByType(command, commandType);
+            
             var handlerType = typeof(ICommandHandler<,>).MakeGenericType(commandType, typeof(TResponse));
             var handler = _serviceProvider.GetService(handlerType);
 
@@ -59,5 +66,20 @@ namespace AutoUpdateChoco.Mediators
 
             return await (Task<TResponse>)method.Invoke(handler, new object[] { query })!;
         }
+        
+       private async Task ValidateCommandByType(object command, Type commandType)
+       {
+           var validatorType = typeof(ICommandValidator<>).MakeGenericType(commandType);
+           var validator = _serviceProvider.GetService(validatorType);
+       
+           if (validator != null)
+           {
+               var method = validatorType.GetMethod("ValidateAndThrowAsync");
+               if (method != null)
+               {
+                   await (Task)method.Invoke(validator, new object[] { command })!;
+               }
+           }
+       }
     }
 }

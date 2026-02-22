@@ -4,6 +4,7 @@
 @using AutoUpdateChoco.Queries
 @using RazorConsole.Components
 @using Spectre.Console
+@using FluentValidation
 
 <Markup Foreground="@Color.Cyan" Content="⚙️  Einstellungen" />
 
@@ -57,8 +58,20 @@
   private async Task ChangeInterval()
   {
     var interval = AnsiConsole.Ask<int>("Intervall in Minuten (min. 5):");
-    await Mediator.Send(new UpdateSettingsCommand { UpdateIntervalMinutes = interval });
-    if (_model != null) _model.UpdateIntervalMinutes = Math.Max(5, interval);
+
+    try
+    {
+      await Mediator.Send(new UpdateSettingsCommand { UpdateIntervalMinutes = interval });
+      if (_model != null) _model.UpdateIntervalMinutes = Math.Max(5, interval);
+      AnsiConsole.MarkupLine("[green]✓ Intervall aktualisiert![/]");
+    }
+    catch (ValidationException validationException)
+    {
+      foreach (var error in validationException.Errors)
+      {
+        AnsiConsole.MarkupLine($"[red]✗ {error.ErrorMessage}[/]");
+      }
+    }
   }
 
   private async Task ToggleNotifications()
